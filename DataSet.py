@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 from matplotlib import colors
+import numpy as np
 import random
 
 DIMENSION = 8
@@ -11,15 +12,10 @@ class DataSet():
                 if line[0] != '#':
                     # not a comment line
                     numbers = line.rstrip('\n').split(',')
-                    numbersIterator = iter(numbers)
-                    grid = []
+                    label = numbers[-1]
+                    grid = np.array(numbers[:-1]).astype(np.int)
                     # reshape the data to a 8x8 grid
-                    for i in xrange(DIMENSION):
-                        row = []
-                        for j in xrange(DIMENSION):
-                            row.append(int(next(numbersIterator)))
-                        grid.append(row)
-                    # print grid, next(numbersIterator), numbers[-1]
+                    grid = grid.reshape((DIMENSION, DIMENSION))
                     label = numbers[-1]
                     self.data.append(Datum(grid, label))
 
