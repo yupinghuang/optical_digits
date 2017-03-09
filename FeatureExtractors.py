@@ -1,4 +1,7 @@
 import util
+import numpy as np
+
+SYMMETRYTHRESHOLD = 0.2
 
 class FeatureExtractor:
     def getFeatures(self, datum):
@@ -9,20 +12,41 @@ class FeatureExtractor:
         """
         util.raiseNotDefined()
 
+    # TODO: delete this maybe
+    def getFeatureNames(self):
+        return ['bias', 'symmetry']
+
+
 class SymmetryExtractor(FeatureExtractor):
     def getFeatures(self, datum):
         """
           Dictionary includes a single feature that
           is the datum. This feature doesn't
           permit generalization.
+
+          get the four sections of the image and
+          sum up the intensity on two sides to compare for symmetry
+
         """
         feats = util.Counter()
-        LeftTop = [][]
-        for i in range(3):
-            for j in range(3):
-
-
         feats['bias'] = 1.0
+
+        leftTop = datum.grid[0:3, 0:3]
+        rightTop = datum.grid[0:3, 4:7]
+        leftBottom = datum.grid[4:7, 0:3]
+        rightBotoom = datum.grid[4:7, 4:7]
+        upperColorIntensity = np.sum(leftTop+rightTop)
+        lowerColorIntensity = np.sum(leftBottom+rightBotoom)
+        # print "leftColorIntensity", upperColorIntensity
+        # print "rightColorIntensity", lowerColorIntensity
+
+        ratio = lowerColorIntensity/float(upperColorIntensity)
+        # print "ratio", ratio
+
+        if abs(ratio - 1) < SYMMETRYTHRESHOLD:
+            feats['symmetry'] = 0.0
+        else:
+            feats['symmetry'] = 1.0
         return feats
 
 

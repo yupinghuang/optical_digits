@@ -4,6 +4,8 @@ import numpy as np
 import random
 
 DIMENSION = 8
+CLASSSET = ['0','1','2','3','4','5','6','7','8','9']
+
 class DataSet():
     def __init__(self, filename):
         self.data = []
@@ -29,7 +31,10 @@ class DataSet():
         return iter(self.data)
     
     def __getitem__(self, key):
-        return iter(self.data[key])
+        return self.data[key]
+
+    def __len__(self):
+        return len(self.data)
 
 
 class Datum(object):
