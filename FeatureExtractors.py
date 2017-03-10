@@ -41,12 +41,7 @@ class SymmetryExtractor(FeatureExtractor):
         # print "rightColorIntensity", lowerColorIntensity
 
         ratio = lowerColorIntensity/float(upperColorIntensity)
-        # print "ratio", ratio
-
-        if abs(ratio - 1) < SYMMETRYTHRESHOLD:
-            feats['symmetry'] = 0.0
-        else:
-            feats['symmetry'] = 1.0
+        feats['asymmetry'] = ratio
         return feats
 
 

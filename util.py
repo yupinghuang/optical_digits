@@ -316,10 +316,9 @@ class Counter(dict):
             self[key] = self[key] / total
 
     def multiplyAll(self, multiplier):
-        if multiplier==0.:
-            self.divideAll(float("inf"))
-        else:
-            self.divideAll(1./multiplier)
+        multiplier = float(multiplier)
+        for key in self:
+            self[key] *= multiplier
 
     def divideAll(self, divisor):
         """
