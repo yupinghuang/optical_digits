@@ -5,7 +5,7 @@ import random
 if __name__=='__main__':
     # Read the data and randomly plot 10 of them
     trainingSet = DataSet('data/optdigits.tra')
-    testingSet = DataSet('data/optdigits.tes')
+    holdoutSet = DataSet('data/optdigits.hol')
     # for i in range(10):
     #     trainingSet.plotRandom()
 
@@ -15,6 +15,5 @@ if __name__=='__main__':
     # MIRAClassfier.train(trainingSubset)
     # MIRAClassfier.test(testingSet)
     MIRAClassfier.train(trainingSet)
-    print 'WARNING: TESTING ON THE TRAINING SET'
-    MIRAClassfier.test(testingSet)
+    MIRAClassfier.test(holdoutSet)
 
