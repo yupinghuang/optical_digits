@@ -6,6 +6,9 @@ from DataSet import CLASSSET
 SYMMETRYTHRESHOLD = 0.2
 
 class FeatureExtractor:
+    def __init__(self):
+        self.feats = util.Counter()
+
     def getFeatures(self, datum):
         """
           Returns a dict from features to counts
@@ -29,8 +32,8 @@ class SymmetryExtractor(FeatureExtractor):
           sum up the intensity on two sides to compare for symmetry
 
         """
-        feats = util.Counter()
-        feats['bias'] = 1.0
+        self.feats = util.Counter()
+        self.feats['bias'] = 1.0
 
         leftTop = datum.grid[0:3, 0:3]
         rightTop = datum.grid[0:3, 4:7]
@@ -47,9 +50,9 @@ class SymmetryExtractor(FeatureExtractor):
         leftRightRatio = leftColorIntensity/float(rightColorIntensity)
         # print "ratio", ratio
 
-        feats['lowerUpperRatio'] = lowerUpperRatio
-        feats['leftRightSymmetry'] = leftRightRatio
-        return feats
+        self.feats['lowerUpperRatio'] = lowerUpperRatio
+        self.feats['leftRightSymmetry'] = leftRightRatio
+        return self.feats
 
 class AllGridExtractor(FeatureExtractor):
     def getFeatures(self, datum):
@@ -66,6 +69,8 @@ class AllGridExtractor(FeatureExtractor):
         return feats
 
 class MaxEntFeatureExtractor(FeatureExtractor):
+    V_FOR_SLACK = 16*64.
+
     def getFeatures(self, datum):
         """
           Dictionary includes 64 features that marks the intensity on
@@ -79,6 +84,8 @@ class MaxEntFeatureExtractor(FeatureExtractor):
                 for j in range(8):
                     feats[(str((i, j)),CLASSSET[c])] = datum.grid[i][j]
                     featureSum += datum.grid[i][j]
-            feats['slack',CLASSSET[c]] = 16.0 * 64-featureSum
+            feats['slack',CLASSSET[c]] = MaxEntFeatureExtractor.V_FOR_SLACK -featureSum
 
-        return feats
+        return self.feats
+
+

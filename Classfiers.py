@@ -2,6 +2,7 @@ import util
 import FeatureExtractors
 from matplotlib import pyplot as plt
 from DataSet import CLASSSET
+import math
 
 MIRACONST = 1.
 
@@ -69,35 +70,54 @@ class MaxEnt(Classifer):
     def train(self, trainingSet):
         #TODO: add iteration part here
         # se = FeatureExtractors.SymmetryExtractor()
-        se = FeatureExtractors.AllGridExtractor()
+        se = FeatureExtractors.MaxEntFeatureExtractor()
         self.weights = util.Counter()
         # compute empirical value for each feature
+
         # TODO move empirical feature somewhere else
         empiricalFeats = util.Counter()
+        modelFeats = util.Counter()
         for datum in trainingSet:
             for i in range(8):
                 for j in range(8):
                     empiricalFeats[(i, j)] += datum.grid[i,j]
         empiricalFeats.divideAll(len(trainingSet))
+        for key in empiricalFeats.keys():
+            modelFeats[key] = 0.
 
         # iteration
-        while (1):
+        # Either converge or just output the result after 10,000 iterations
+        for i in xrange(10000):
             # compute expectation for each feature
             for datum in trainingSet:
-                datumFeature = se.getFeatures(datum)
+                for label in CLASSSET:
+                    for key in modelFeats.keys():
+                        datumFeature = se.getFeatures(datum)
+                        classificationProb = self.classificationProb(datumFeature,label,datum)
+                        featValue = datumFeature[(key, label)]
+                        modelFeats[key] += classificationProb*featValue
+            modelFeats.divideAll(len(trainingSet))
 
+            updateRatioVector = (empiricalFeats/modelFeats)**(1/se.V_FOR_SLACK)
+            for key, value in self.weights.items():
+                self.weights[key] = value * updateRatioVector[key[0]]
+            if max(updateRatioVector) < 1e-2:
+                print 'maxent converged!'
+                break
 
+    def classificationProb(self, feats, label):
+        labelWeights = util.Counter()
+        for key, value in self.weights.items():
+            if key[1] == label:
+                labelWeights[key] = value
 
+        numerator = math.exp(labelWeights * feats)
+        denominator = math.exp(self.weights * feats)
+        return numerator/denominator
 
-        util.raiseNotDefined()
-
-    def classificationProb(feats, label, datum):
-        raise NotImplementedError
-        numerator = exp(self.weights[label] feats[])
-        denominator =
-
+    #TODO: WRITE PREDICT
     def predict(self, datumFeature):
-        maxlabel = max(CLASSSET, key=lambda label: self.weights[label] * datumFeature)
+        maxlabel = max(CLASSSET, key=lambda label: self.classificationProb(datumFeature, label))
         # print maxlabel
         util.raiseNotDefined()
 
