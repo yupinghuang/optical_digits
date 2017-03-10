@@ -3,7 +3,7 @@ import FeatureExtractors
 from matplotlib import pyplot as plt
 from DataSet import CLASSSET
 
-MIRACONST = 10.
+MIRACONST = 1.
 
 class Classifer:
     def __init__(self):
@@ -27,24 +27,23 @@ class MIRA(Classifer):
 
         for datum in trainingSet:
             datumFeature = se.getFeatures(datum)
-            plot = datum.draw()
-            # plt.show(plot)
 
             classifiedLabel = self.predict(datumFeature)
             # print "RIGHT LABEL", datum.label
-            # print "Classified Label", classifiedLabel
-
             if datum.label!= classifiedLabel:
-                tau = ((self.weights[classifiedLabel] - self.weights[datum.label])*datumFeature-1)\
+                tau = ((self.weights[classifiedLabel] - self.weights[datum.label])*datumFeature + 1)\
                       /(2.0*(datumFeature*datumFeature))
                 tau = min(tau, MIRACONST)
                 datumFeatureMultiplied = datumFeature.copy()
                 datumFeatureMultiplied.multiplyAll(tau)
                 self.weights[classifiedLabel] -= datumFeatureMultiplied
                 self.weights[datum.label] += datumFeatureMultiplied
+                print self.weights[datum.label]
 
     def predict(self, datumFeature):
-        return max(CLASSSET, key=lambda label: self.weights[label] * datumFeature)
+        maxlabel = max(CLASSSET, key=lambda label: self.weights[label] * datumFeature)
+        # print maxlabel
+        return maxlabel
 
     def test(self, testingSet):
         rightPredicts = 0

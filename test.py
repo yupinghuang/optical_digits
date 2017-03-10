@@ -15,5 +15,6 @@ if __name__=='__main__':
     # MIRAClassfier.train(trainingSubset)
     # MIRAClassfier.test(testingSet)
     MIRAClassfier.train(trainingSet)
-    MIRAClassfier.test(testingSet)
+    print 'WARNING: TESTING ON THE TRAINING SET'
+    MIRAClassfier.test(trainingSet)
 
