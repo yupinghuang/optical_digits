@@ -21,7 +21,9 @@ class Classifer:
 class MIRA(Classifer):
     def train(self, trainingSet):
         #TODO: add iteration part here
-        se = FeatureExtractors.SymmetryExtractor()
+        # se = FeatureExtractors.SymmetryExtractor()
+        se = FeatureExtractors.AllGridExtractor()
+
         for label in CLASSSET:
             self.weights[label] = util.Counter()
 
@@ -30,6 +32,7 @@ class MIRA(Classifer):
 
             classifiedLabel = self.predict(datumFeature)
             # print "RIGHT LABEL", datum.label
+
             if datum.label!= classifiedLabel:
                 tau = ((self.weights[classifiedLabel] - self.weights[datum.label])*datumFeature + 1)\
                       /(2.0*(datumFeature*datumFeature))
@@ -38,7 +41,7 @@ class MIRA(Classifer):
                 datumFeatureMultiplied.multiplyAll(tau)
                 self.weights[classifiedLabel] -= datumFeatureMultiplied
                 self.weights[datum.label] += datumFeatureMultiplied
-                print self.weights[datum.label]
+                # print self.weights[datum.label]
 
     def predict(self, datumFeature):
         maxlabel = max(CLASSSET, key=lambda label: self.weights[label] * datumFeature)
@@ -47,11 +50,17 @@ class MIRA(Classifer):
 
     def test(self, testingSet):
         rightPredicts = 0
-        se = FeatureExtractors.SymmetryExtractor()
+        # se = FeatureExtractors.SymmetryExtractor()
+        se = FeatureExtractors.AllGridExtractor()
         for datum in testingSet:
             datumFeature = se.getFeatures(datum)
             classifiedLabel = self.predict(datumFeature)
             if classifiedLabel == datum.label:
                 rightPredicts += 1
+
+            print "RIGHT LABEL", datum.label
+            print "CLASSIFIED LABEL", classifiedLabel
+            plot = datum.draw()
+            plt.show(plot)
 
         print "RIGHTLY PREDICTED:", float(rightPredicts)/len(testingSet)
