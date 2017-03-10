@@ -1,5 +1,7 @@
 import util
 import numpy as np
+from DataSet import CLASSSET
+
 
 SYMMETRYTHRESHOLD = 0.2
 
@@ -20,11 +22,10 @@ class FeatureExtractor:
 class SymmetryExtractor(FeatureExtractor):
     def getFeatures(self, datum):
         """
-          Dictionary includes a single feature that
-          is the datum. This feature doesn't
-          permit generalization.
+          Dictionary includes two features that marks the symmetry of
+          the image
 
-          get the four sections of the image and
+          Get the four sections of the image and
           sum up the intensity on two sides to compare for symmetry
 
         """
@@ -53,12 +54,8 @@ class SymmetryExtractor(FeatureExtractor):
 class AllGridExtractor(FeatureExtractor):
     def getFeatures(self, datum):
         """
-          Dictionary includes a single feature that
-          is the datum. This feature doesn't
-          permit generalization.
-
-          get the intensity on each grid space of the datum as a single feature
-
+          Dictionary includes 64 features that marks the intensity on
+          each grid space of the datum as a single feature
         """
         feats = util.Counter()
         feats['bias'] = 1.0
@@ -66,4 +63,22 @@ class AllGridExtractor(FeatureExtractor):
         for i in range(8):
             for j in range(8):
                 feats[str((i,j))] = datum.grid[i][j]
+        return feats
+
+class MaxEntFeatureExtractor(FeatureExtractor):
+    def getFeatures(self, datum):
+        """
+          Dictionary includes 64 features that marks the intensity on
+          each grid space of the datum as a single feature
+        """
+
+        feats = util.Counter()
+        for c in range(10):
+            featureSum = 0
+            for i in range(8):
+                for j in range(8):
+                    feats[(str((i, j)),CLASSSET[c])] = datum.grid[i][j]
+                    featureSum += datum.grid[i][j]
+            feats['slack',CLASSSET[c]] = 16.0 * 64-featureSum
+
         return feats

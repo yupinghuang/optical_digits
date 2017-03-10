@@ -64,3 +64,43 @@ class MIRA(Classifer):
             plt.show(plot)
 
         print "RIGHTLY PREDICTED:", float(rightPredicts)/len(testingSet)
+
+class MaxEnt(Classifer):
+    def train(self, trainingSet):
+        #TODO: add iteration part here
+        # se = FeatureExtractors.SymmetryExtractor()
+        se = FeatureExtractors.AllGridExtractor()
+        self.weights = util.Counter()
+        # compute empirical value for each feature
+        # TODO move empirical feature somewhere else
+        empiricalFeats = util.Counter()
+        for datum in trainingSet:
+            for i in range(8):
+                for j in range(8):
+                    empiricalFeats[(i, j)] += datum.grid[i,j]
+        empiricalFeats.divideAll(len(trainingSet))
+
+        # iteration
+        while (1):
+            # compute expectation for each feature
+            for datum in trainingSet:
+                datumFeature = se.getFeatures(datum)
+
+
+
+
+        util.raiseNotDefined()
+
+    def classificationProb(feats, label, datum):
+        raise NotImplementedError
+        numerator = exp(self.weights[label] feats[])
+        denominator =
+
+    def predict(self, datumFeature):
+        maxlabel = max(CLASSSET, key=lambda label: self.weights[label] * datumFeature)
+        # print maxlabel
+        util.raiseNotDefined()
+
+    def test(self, testingSet):
+        rightPredicts = 0
+        util.raiseNotDefined()
