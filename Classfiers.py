@@ -7,8 +7,9 @@ import math
 MIRACONST = 1.
 
 class Classifer:
-    def __init__(self):
+    def __init__(self, featureExtractor):
         self.weights = {}
+        self.featureExtractor = featureExtractor
 
     def train(self, trainingSet):
         util.raiseNotDefined()
@@ -20,24 +21,26 @@ class Classifer:
         util.raiseNotDefined()
 
 class MIRA(Classifer):
+    def __init__(self, featureExtractor, miraConst = MIRACONST):
+        self.miraConst = miraConst
+        Classifer.__init__(self, featureExtractor)
+
     def train(self, trainingSet):
         #TODO: add iteration part here
-        # se = FeatureExtractors.SymmetryExtractor()
-        se = FeatureExtractors.AllGridExtractor()
 
         for label in CLASSSET:
             self.weights[label] = util.Counter()
 
         for datum in trainingSet:
-            datumFeature = se.getFeatures(datum)
+            datumFeature = self.featureExtractor.getFeatures(datum)
 
             classifiedLabel = self.predict(datumFeature)
             # print "RIGHT LABEL", datum.label
 
             if datum.label!= classifiedLabel:
-                tau = ((self.weights[classifiedLabel] - self.weights[datum.label])*datumFeature + 1)\
-                      /(2.0*(datumFeature*datumFeature))
-                tau = min(tau, MIRACONST)
+                tau = ((self.weights[classifiedLabel] - self.weights[datum.label])*datumFeature + 1)/(2.0*(datumFeature*datumFeature))
+                tau = min(tau, self.miraConst)
+
                 datumFeatureMultiplied = datumFeature.copy()
                 datumFeatureMultiplied.multiplyAll(tau)
                 self.weights[classifiedLabel] -= datumFeatureMultiplied
@@ -51,26 +54,22 @@ class MIRA(Classifer):
 
     def test(self, testingSet):
         rightPredicts = 0
-        # se = FeatureExtractors.SymmetryExtractor()
-        se = FeatureExtractors.AllGridExtractor()
         for datum in testingSet:
-            datumFeature = se.getFeatures(datum)
+            datumFeature = self.featureExtractor.getFeatures(datum)
             classifiedLabel = self.predict(datumFeature)
             if classifiedLabel == datum.label:
                 rightPredicts += 1
 
-            print "RIGHT LABEL", datum.label
-            print "CLASSIFIED LABEL", classifiedLabel
-            plot = datum.draw()
-            plt.show(plot)
+            # print "RIGHT LABEL", datum.label
+            # print "CLASSIFIED LABEL", classifiedLabel
+            # plot = datum.draw()
+            # plt.show(plot)
 
         print "RIGHTLY PREDICTED:", float(rightPredicts)/len(testingSet)
 
 class MaxEnt(Classifer):
     def train(self, trainingSet):
         #TODO: add iteration part here
-        # se = FeatureExtractors.SymmetryExtractor()
-        se = FeatureExtractors.MaxEntFeatureExtractor()
         self.weights = util.Counter()
         # compute empirical value for each feature
 
@@ -92,13 +91,13 @@ class MaxEnt(Classifer):
             for datum in trainingSet:
                 for label in CLASSSET:
                     for key in modelFeats.keys():
-                        datumFeature = se.getFeatures(datum)
+                        datumFeature = self.featureExtractor.getFeatures(datum)
                         classificationProb = self.classificationProb(datumFeature,label,datum)
                         featValue = datumFeature[(key, label)]
                         modelFeats[key] += classificationProb*featValue
             modelFeats.divideAll(len(trainingSet))
 
-            updateRatioVector = (empiricalFeats/modelFeats)**(1/se.V_FOR_SLACK)
+            updateRatioVector = (empiricalFeats/modelFeats)**(1/self.featureExtractor.V_FOR_SLACK)
             for key, value in self.weights.items():
                 self.weights[key] = value * updateRatioVector[key[0]]
             if max(updateRatioVector) < 1e-2:

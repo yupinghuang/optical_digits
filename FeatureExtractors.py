@@ -61,11 +61,12 @@ class AllGridExtractor(FeatureExtractor):
           each grid space of the datum as a single feature
         """
         feats = util.Counter()
-        feats['bias'] = 1.0
 
         for i in range(8):
             for j in range(8):
                 feats[str((i,j))] = datum.grid[i][j]
+        feats.divideAll(16.)
+        feats['bias'] = 1.0
         return feats
 
 class MaxEntFeatureExtractor(FeatureExtractor):
