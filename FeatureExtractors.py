@@ -60,14 +60,13 @@ class AllGridExtractor(FeatureExtractor):
           Dictionary includes 64 features that marks the intensity on
           each grid space of the datum as a single feature
         """
-        feats = util.Counter()
 
         for i in range(8):
             for j in range(8):
-                feats[str((i,j))] = datum.grid[i][j]
-        feats.divideAll(16.)
-        feats['bias'] = 1.0
-        return feats
+                self.feats[str((i,j))] = datum.grid[i][j]
+        self.feats.divideAll(16.)
+        self.feats['bias'] = 1.0
+        return self.feats
 
 class MaxEntFeatureExtractor(FeatureExtractor):
     V_FOR_SLACK = 16*64.
@@ -78,15 +77,15 @@ class MaxEntFeatureExtractor(FeatureExtractor):
           each grid space of the datum as a single feature
         """
 
-        feats = util.Counter()
-        for c in len(CLASSSET):
+        for c in CLASSSET:
             featureSum = 0
             for i in range(8):
                 for j in range(8):
-                    feats[(str((i, j)),CLASSSET[c])] = datum.grid[i][j]
+                    self.feats[(str((i, j)),c)] = datum.grid[i][j]
                     featureSum += datum.grid[i][j]
-            feats['slack',CLASSSET[c]] = MaxEntFeatureExtractor.V_FOR_SLACK -featureSum
 
+            self.feats['slack',c] = MaxEntFeatureExtractor.V_FOR_SLACK -featureSum
+        self.feats.divideAll(self.V_FOR_SLACK)
         return self.feats
 
 

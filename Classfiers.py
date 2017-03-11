@@ -1,6 +1,7 @@
 import util
 import FeatureExtractors
 from matplotlib import pyplot as plt
+import numpy as np
 from DataSet import CLASSSET
 import math
 
@@ -67,19 +68,11 @@ class MIRA(Classifer):
 
 class MaxEnt(Classifer):
     def train(self, trainingSet):
-        #TODO: add iteration part here
         self.weights = util.Counter()
-        # compute empirical value for each feature
-
-        # TODO move empirical feature somewhere else
         empiricalFeats = util.Counter()
         modelFeats = util.Counter()
-        '''
-        for datum in trainingSet:
-            for i in range(8):
-                for j in range(8):
-                    empiricalFeats[(i, j)] += datum.grid[i,j]
-        '''
+        # TODO store feature vectors for all data
+        # compute empirical value for each feature
         for datum in trainingSet:
             allLabelFeatures = self.featureExtractor.getFeatures(datum)
             for featureKey, value in allLabelFeatures.items():
@@ -87,41 +80,63 @@ class MaxEnt(Classifer):
                 if label == datum.label:
                     empiricalFeats[featureName] += value
         empiricalFeats.divideAll(len(trainingSet))
+        print 'emp', empiricalFeats
+        # Intialize model feature values and the compute them through iteration
         for key in empiricalFeats.keys():
             modelFeats[key] = 0.
 
         # iteration
         # Either converge or just output the result after 10,000 iterations
         for i in xrange(10000):
+            print 'iteration', i
+
             # compute expectation for each feature
             for datum in trainingSet:
+                datumFeature = self.featureExtractor.getFeatures(datum)
+                classificationDist = self.classificationDist(datumFeature)
                 for label in CLASSSET:
+                    # print 'class prob', classificationProb
                     for key in modelFeats.keys():
-                        datumFeature = self.featureExtractor.getFeatures(datum)
-                        classificationProb = self.classificationProb(datumFeature,label,datum)
                         featValue = datumFeature[(key, label)]
-                        modelFeats[key] += classificationProb*featValue
+                        modelFeats[key] += classificationDist[label] * featValue
+            print 'all data done'
             modelFeats.divideAll(len(trainingSet))
+            import numpy as np
+            print 'model', modelFeats
 
-            updateRatioVector = (empiricalFeats/modelFeats)**(1/self.featureExtractor.V_FOR_SLACK)
-            for key, value in self.weights.items():
-                self.weights[key] = value * updateRatioVector[key[0]]
-            if max(updateRatioVector) < 1e-2:
+            updateRatioVector = util.Counter()
+            for featureName in empiricalFeats:
+                if modelFeats[featureName] != 0.:
+                    updateRatioVector[featureName] = (empiricalFeats[featureName]/modelFeats[featureName])
+
+            for key, value in updateRatioVector.items():
+                for label in CLASSSET:
+                    oldWeight = self.weights.setdefault((key, label), 1.)
+                    self.weights[(key, label)] = value * oldWeight
+            print updateRatioVector[max(updateRatioVector)], updateRatioVector[min(updateRatioVector)]
+            converge = True
+            for key, value in updateRatioVector.items():
+                if abs(value-1.) > 1e-2:
+                    converge = False
+                    break
+            if converge:
                 print 'maxent converged!'
                 break
 
-    def classificationProb(self, feats, label):
-        labelWeights = util.Counter()
-        for key, value in self.weights.items():
-            if key[1] == label:
-                labelWeights[key] = value
+    def classificationDist(self, feats):
+        exponents = util.Counter()
+        for key, value in feats.items():
+            exponents[key[1]] += self.weights.setdefault(key, 1.) * value
+            print exponents[key[1]]
+        print 'exp', exponents
+        dist = util.Counter()
+        for key, value in exponents.items():
+            dist[key] = math.exp(value)
+        dist.normalize()
+        print 'dist', dist
+        return dist
 
-        numerator = math.exp(labelWeights * feats)
-        denominator = math.exp(self.weights * feats)
-        return numerator/denominator
-
-    #TODO: WRITE PREDICT
     def predict(self, datumFeature):
-        maxlabel = max(CLASSSET, key=lambda label: self.classificationProb(datumFeature, label))
+        maxlabel = max(CLASSSET, key=lambda label: self.classificationDist(datumFeature)[label])
         # print maxlabel
-        util.raiseNotDefined()
+        return maxlabel
