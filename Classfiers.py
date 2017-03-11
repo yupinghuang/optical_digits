@@ -76,10 +76,18 @@ class MaxEnt(Classifer):
         # TODO move empirical feature somewhere else
         empiricalFeats = util.Counter()
         modelFeats = util.Counter()
+        '''
         for datum in trainingSet:
             for i in range(8):
                 for j in range(8):
                     empiricalFeats[(i, j)] += datum.grid[i,j]
+        '''
+        for datum in trainingSet:
+            allLabelFeatures = self.featureExtractor.getFeatures(datum)
+            for featureKey, value in allLabelFeatures.items():
+                featureName, label = featureKey
+                if label == datum.label:
+                    empiricalFeats[featureName] += value
         empiricalFeats.divideAll(len(trainingSet))
         for key in empiricalFeats.keys():
             modelFeats[key] = 0.
