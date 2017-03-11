@@ -18,7 +18,19 @@ class Classifer:
         util.raiseNotDefined()
 
     def test(self, testingSet):
-        util.raiseNotDefined()
+        rightPredicts = 0
+        for datum in testingSet:
+            datumFeature = self.featureExtractor.getFeatures(datum)
+            classifiedLabel = self.predict(datumFeature)
+            if classifiedLabel == datum.label:
+                rightPredicts += 1
+
+            # print "RIGHT LABEL", datum.label
+            # print "CLASSIFIED LABEL", classifiedLabel
+            # plot = datum.draw()
+            # plt.show(plot)
+
+        print "RIGHTLY PREDICTED:", float(rightPredicts)/len(testingSet)
 
 class MIRA(Classifer):
     def __init__(self, featureExtractor, miraConst = MIRACONST):
@@ -52,20 +64,6 @@ class MIRA(Classifer):
         # print maxlabel
         return maxlabel
 
-    def test(self, testingSet):
-        rightPredicts = 0
-        for datum in testingSet:
-            datumFeature = self.featureExtractor.getFeatures(datum)
-            classifiedLabel = self.predict(datumFeature)
-            if classifiedLabel == datum.label:
-                rightPredicts += 1
-
-            # print "RIGHT LABEL", datum.label
-            # print "CLASSIFIED LABEL", classifiedLabel
-            # plot = datum.draw()
-            # plt.show(plot)
-
-        print "RIGHTLY PREDICTED:", float(rightPredicts)/len(testingSet)
 
 class MaxEnt(Classifer):
     def train(self, trainingSet):
@@ -126,8 +124,4 @@ class MaxEnt(Classifer):
     def predict(self, datumFeature):
         maxlabel = max(CLASSSET, key=lambda label: self.classificationProb(datumFeature, label))
         # print maxlabel
-        util.raiseNotDefined()
-
-    def test(self, testingSet):
-        rightPredicts = 0
         util.raiseNotDefined()
