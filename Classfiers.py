@@ -143,3 +143,48 @@ class MaxEnt(Classifer):
         maxlabel = max(CLASSSET, key=lambda label: self.classificationDist(datumFeature)[label])
         # print maxlabel
         return maxlabel
+
+class DecisionTree(Classifer):
+    def train(self, trainingSet):
+        # store feature vectors for all data
+        featureData = []
+        featureList = []
+        for datum in trainingSet:
+            featureVector = self.featureExtractor.getFeatures(datum)
+            featureData.append((featureVector, datum.label))
+            if not featureList:
+                featureList = featureVector.keys()
+
+        
+
+    def getConditionalEntropy(self,feature, trainingSetFeatures,trainingSet, featureValues):
+        # create a matrix to store the value
+        probabilityMatrix = np.zeros((len(featureValues),len(CLASSSET)))
+        # going through each datum to count their occurance for the label and feature
+        # assume that feature values are 0,1,2,....
+        # TODO: change into dictionary
+        for datum in trainingSet:
+            datumFeature = trainingSetFeatures[datum]
+            featureValue = datumFeature[feature]
+            label = datum.label
+            probabilityMatrix[featureValue][int(label)] += 1
+
+        # sum to find the sum of
+        featureCount = np.sum(probabilityMatrix,axis = 1)
+        featureProb = featureCount/len(trainingSet)
+
+        # for featureValue in featureValues:
+        #     for label in CLASSSET:
+        #         probabilityMatrix[featureValue][label] = probabilityMatrix[featureValue][label]/featureCount[featureValue]
+
+        #calculate out conditional entropy
+        condEntropy = 0
+        for featureValue in featureValues:
+            sumFeatureValueEntropy = 0
+            for label in CLASSSET:
+                condProb = probabilityMatrix[featureValue][int(label)] / featureCount[
+                    featureValue]
+                sumFeatureValueEntropy += condProb * math.log(condProb,2)
+            condEntropy -= featureProb[featureValue] * sumFeatureValueEntropy
+
+        return condEntropy

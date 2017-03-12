@@ -88,4 +88,28 @@ class MaxEntFeatureExtractor(FeatureExtractor):
         self.feats.divideAll(self.V_FOR_SLACK)
         return self.feats
 
+class DecisionTreeFeatureExtractor(FeatureExtractor):
+
+    def getFeatures(self, datum):
+        """
+
+        :param datum:
+        :return: return the features of the brightness of each grid intentensity for the given datum.
+        """
+
+        for i in range(8):
+            for j in range(8):
+                intensity = datum.grid[i][j]
+                if intensity < 6:
+                    brightness = 0
+                elif intensity <11:
+                    brightness = 1
+                else:
+                    brightness = 2
+                self.feats[str((i, j))] = brightness
+
+        return self.feats
+
+    def getFeatureValues(self):
+        return [0,1,2]
 
