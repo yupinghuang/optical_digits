@@ -28,7 +28,7 @@ class DecisionTreeNode(object):
         :return:
         """
         root = DecisionTreeNode(unsplitFeatureList=featureList)
-        root.data = featureData
+        root.featureData = featureData
         return root
 
     def splitOnFeature(self, featureName):
@@ -48,6 +48,17 @@ class DecisionTreeNode(object):
                 feature=featureName, value=featureValue, parent=self))
             childNode.featureData.append(dataPoint)
 
+    def find(self, featureVector):
+        """
+        Find a leaf node that the featureVector belongs
+        :param featureVector:
+        :return:
+        """
+        if not self.children:
+            return self
+        else:
+            return self.children[featureVector[self.feature]].fin(featureVector)
+        
     def getLabelDist(self):
         dist = util.Counter()
         for data, label in self.featureData:

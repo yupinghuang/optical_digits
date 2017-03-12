@@ -155,9 +155,8 @@ class DecisionTree(Classifer):
             featureData.append((featureVector, datum.label))
             if not featureList:
                 featureList = featureVector.keys()
-
-        root = DecisionTreeNode.getRoot(featureList, featureData)
-        self.buildTree(root)
+        self.root = DecisionTreeNode.getRoot(featureList, featureData)
+        self.buildTree(self.root)
 
     def buildTree(self, root):
         """
@@ -234,3 +233,7 @@ class DecisionTree(Classifer):
             condEntropy -= featureProb[featureValue] * sumFeatureValueEntropy
 
         return condEntropy
+
+    def predict(self, features):
+        leafNode = self.root.find(features)
+        return leafNode.getmostProbableLabel()
