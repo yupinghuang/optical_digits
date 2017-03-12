@@ -96,7 +96,7 @@ class DecisionTreeFeatureExtractor(FeatureExtractor):
         :param datum:
         :return: return the features of the brightness of each grid intentensity for the given datum.
         """
-
+        feats = util.Counter()
         for i in range(8):
             for j in range(8):
                 intensity = datum.grid[i][j]
@@ -106,9 +106,9 @@ class DecisionTreeFeatureExtractor(FeatureExtractor):
                     brightness = 1
                 else:
                     brightness = 2
-                self.feats[str((i, j))] = brightness
+                feats[str((i, j))] = brightness
 
-        return self.feats
+        return feats
 
     def getFeatureValues(self):
         return [0,1,2]
