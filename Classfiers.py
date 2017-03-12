@@ -3,6 +3,7 @@ import FeatureExtractors
 from matplotlib import pyplot as plt
 import numpy as np
 from DataSet import CLASSSET
+from DecisionTreeNode import DecisionTreeNode
 import math
 
 MIRACONST = 1.
@@ -155,23 +156,68 @@ class DecisionTree(Classifer):
             if not featureList:
                 featureList = featureVector.keys()
 
-        
+        root = DecisionTreeNode.getRoot(featureList, featureData)
+        self.buildTree(root)
 
-    def getConditionalEntropy(self,feature, trainingSetFeatures,trainingSet, featureValues):
+    def buildTree(self, root):
+        """
+        recursive method to build the decision tree.
+        :param root:
+        :return:
+        """
+        # Base case
+        # if there is no more attribute to split on
+        if len(root.unsplitFeatureList) == 0 or len(root.featureData)==1:
+            return
+
+        # if all the examples left are of the same attributes
+        allTheSame = True
+        for feature in root.unsplitFeatureList:
+            if not allTheSame:
+                break
+            firstValue = root.featureData[0][0][feature]
+            for data in root.featureData:
+                if data[0][feature] != firstValue:
+                    allTheSame = False
+                    break
+        if allTheSame:
+            return
+
+        # if all the example lefts are of the same label
+        allTheSame = True
+        firstLabel = root.featureData[0][1]
+        for data in root.featureData:
+            if data[1] != firstLabel:
+                allTheSame = False
+                break
+        if allTheSame:
+            return
+
+        featureToSplit = self.pickFeatureToSplit(root.unsplitFeatureList, root.featureData)
+        root.splitOnFeature(featureToSplit)
+        for key,child in root.children.items():
+            self.buildTree(child)
+
+    def pickFeatureToSplit(self, remainingFeatures, remainingData):
+        featureToSplit = min(remainingFeatures, key=lambda f: self.getConditionalEntropy(f, remainingData,
+                            self.featureExtractor.getFeatureValues()))
+        return featureToSplit
+
+    def getConditionalEntropy(self,feature, trainingSetFeatures, featureValues):
         # create a matrix to store the value
         probabilityMatrix = np.zeros((len(featureValues),len(CLASSSET)))
         # going through each datum to count their occurance for the label and feature
         # assume that feature values are 0,1,2,....
         # TODO: change into dictionary
-        for datum in trainingSet:
-            datumFeature = trainingSetFeatures[datum]
+        for datum in trainingSetFeatures:
+            datumFeature = datum[0]
             featureValue = datumFeature[feature]
             label = datum.label
             probabilityMatrix[featureValue][int(label)] += 1
 
         # sum to find the sum of
         featureCount = np.sum(probabilityMatrix,axis = 1)
-        featureProb = featureCount/len(trainingSet)
+        featureProb = featureCount/len(trainingSetFeatures)
 
         # for featureValue in featureValues:
         #     for label in CLASSSET:

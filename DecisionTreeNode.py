@@ -10,7 +10,7 @@ class DecisionTreeNode(object):
         :param value: the value of the feature this node is split on.
         :param parent: the parent.
         """
-        self.featureList = unsplitFeatureList
+        self.unsplitFeatureList = unsplitFeatureList
         self.parent = parent
         self.children = {}
         self.feature = feature
@@ -40,7 +40,7 @@ class DecisionTreeNode(object):
         if self.children:
             raise Exception("Cannot split on a node that has children")
 
-        nextFeatureList = list(self.featureList)
+        nextFeatureList = list(self.unsplitFeatureList)
         nextFeatureList.remove(featureName)
         for dataPoint in self.data:
             featureValue = dataPoint[0][featureName]
