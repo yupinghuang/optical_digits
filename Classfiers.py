@@ -71,10 +71,14 @@ class MaxEnt(Classifer):
         self.weights = util.Counter()
         empiricalFeats = util.Counter()
         modelFeats = util.Counter()
-        # TODO store feature vectors for all data
+        # store feature vectors for all data
+        trainingSetFeatures = {}
+        for datum in trainingSet:
+            trainingSetFeatures[datum] = self.featureExtractor.getFeatures(datum)
+
         # compute empirical value for each feature
         for datum in trainingSet:
-            allLabelFeatures = self.featureExtractor.getFeatures(datum)
+            allLabelFeatures = trainingSetFeatures[datum]
             for featureKey, value in allLabelFeatures.items():
                 featureName, label = featureKey
                 if label == datum.label:
@@ -92,7 +96,7 @@ class MaxEnt(Classifer):
 
             # compute expectation for each feature
             for datum in trainingSet:
-                datumFeature = self.featureExtractor.getFeatures(datum)
+                datumFeature = trainingSetFeatures[datum]
                 classificationDist = self.classificationDist(datumFeature)
                 for label in CLASSSET:
                     # print 'class prob', classificationProb
@@ -113,12 +117,14 @@ class MaxEnt(Classifer):
                 for label in CLASSSET:
                     oldWeight = self.weights.setdefault((key, label), 1.)
                     self.weights[(key, label)] = value * oldWeight
-            print updateRatioVector[max(updateRatioVector)], updateRatioVector[min(updateRatioVector)]
+
+            # check for convergence
             converge = True
             for key, value in updateRatioVector.items():
                 if abs(value-1.) > 1e-2:
                     converge = False
                     break
+            converge = False
             if converge:
                 print 'maxent converged!'
                 break
@@ -127,13 +133,10 @@ class MaxEnt(Classifer):
         exponents = util.Counter()
         for key, value in feats.items():
             exponents[key[1]] += self.weights.setdefault(key, 1.) * value
-            print exponents[key[1]]
-        print 'exp', exponents
         dist = util.Counter()
         for key, value in exponents.items():
             dist[key] = math.exp(value)
         dist.normalize()
-        print 'dist', dist
         return dist
 
     def predict(self, datumFeature):
