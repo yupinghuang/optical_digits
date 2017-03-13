@@ -119,7 +119,6 @@ class MaxEnt(Classifer):
                 oldWeight = self.weights.setdefault(key, 1.)
                 self.weights[key] = value * oldWeight
 
-            print 'ratio', updateRatioVector
             # check for convergence
             converge = True
             for key, value in updateRatioVector.items():
@@ -136,9 +135,16 @@ class MaxEnt(Classifer):
         for key, value in feats.items():
             exponents[key[1]] += self.weights.setdefault(key, 1.) * value
         dist = util.Counter()
+        overflowCount = 0
         for key, value in exponents.items():
-            print value
-            dist[key] = math.exp(value)
+            try:
+                dist[key] = math.exp(value)
+            except OverflowError:
+                if overflowCount==1:
+                    raise "Two labels have overflown likelihood"
+                overflowCount += 1
+                print 'likelihood overflown for label', key
+                dist[key] = float("inf")
         dist.normalize()
         return dist
 
