@@ -79,19 +79,18 @@ class MaxEnt(Classifer):
 
         # compute empirical value for each feature
         for datum in trainingSet:
-            allLabelFeatures = trainingSetFeatures[datum]
-            for featureKey, value in allLabelFeatures.items():
-                featureName, label = featureKey
-                if label == datum.label:
-                    empiricalFeats[featureName] += value
+            for featureKey, value in trainingSetFeatures[datum].items():
+                    if featureKey[1] == datum.label:
+                        empiricalFeats[featureKey] += value
         empiricalFeats.divideAll(len(trainingSet))
-        print 'emp', empiricalFeats
+
         # Intialize model feature values and the compute them through iteration
         for key in empiricalFeats.keys():
             modelFeats[key] = 0.
 
         # iteration
         # Either converge or just output the result after 10,000 iterations
+
         for i in xrange(10000):
             print 'iteration', i
 
@@ -99,33 +98,35 @@ class MaxEnt(Classifer):
             for datum in trainingSet:
                 datumFeature = trainingSetFeatures[datum]
                 classificationDist = self.classificationDist(datumFeature)
-                for label in CLASSSET:
-                    # print 'class prob', classificationProb
-                    for key in modelFeats.keys():
-                        featValue = datumFeature[(key, label)]
-                        modelFeats[key] += classificationDist[label] * featValue
+
+                for key in datumFeature:
+                    featValue = datumFeature[key]
+                    modelFeats[key] += classificationDist[key[1]] * datumFeature[key]
+
             print 'all data done'
             modelFeats.divideAll(len(trainingSet))
-            import numpy as np
-            print 'model', modelFeats
 
             updateRatioVector = util.Counter()
-            for featureName in empiricalFeats:
-                if modelFeats[featureName] != 0.:
-                    updateRatioVector[featureName] = (empiricalFeats[featureName]/modelFeats[featureName])
+            for featureKey, value in empiricalFeats.items():
+                if value != 0.:
+                    if modelFeats[featureKey] != 0.:
+                        updateRatioVector[featureKey] = empiricalFeats[featureKey]/modelFeats[featureKey]
+                    else:
+                        updateRatioVector[featureKey] = 1.0
+
 
             for key, value in updateRatioVector.items():
-                for label in CLASSSET:
-                    oldWeight = self.weights.setdefault((key, label), 1.)
-                    self.weights[(key, label)] = value * oldWeight
+                oldWeight = self.weights.setdefault(key, 1.)
+                self.weights[key] = value * oldWeight
 
+            print 'ratio', updateRatioVector
             # check for convergence
             converge = True
             for key, value in updateRatioVector.items():
                 if abs(value-1.) > 1e-2:
                     converge = False
                     break
-            converge = False
+
             if converge:
                 print 'maxent converged!'
                 break
@@ -136,6 +137,7 @@ class MaxEnt(Classifer):
             exponents[key[1]] += self.weights.setdefault(key, 1.) * value
         dist = util.Counter()
         for key, value in exponents.items():
+            print value
             dist[key] = math.exp(value)
         dist.normalize()
         return dist

@@ -20,14 +20,13 @@ if __name__=='__main__':
     MIRAClassfier.train(trainingSet)
     MIRAClassfier.test(holdoutSet)
     '''
-    '''
     maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntFeatureExtractor())
     maxEntClassifier.train(trainingSet)
     print 'TEST ON TRAINING SET!!!'
     maxEntClassifier.test(trainingSet)
     '''
-
     dt = Classfiers.DecisionTree(featureExtractor=DecisionTreeFeatureExtractor())
     dt.train(trainingSet)
     dt.test(testSet)
 
+    '''

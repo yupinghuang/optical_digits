@@ -32,8 +32,8 @@ class SymmetryExtractor(FeatureExtractor):
           sum up the intensity on two sides to compare for symmetry
 
         """
-        self.feats = util.Counter()
-        self.feats['bias'] = 1.0
+        feats = util.Counter()
+        feats['bias'] = 1.0
 
         leftTop = datum.grid[0:3, 0:3]
         rightTop = datum.grid[0:3, 4:7]
@@ -50,9 +50,9 @@ class SymmetryExtractor(FeatureExtractor):
         leftRightRatio = leftColorIntensity/float(rightColorIntensity)
         # print "ratio", ratio
 
-        self.feats['lowerUpperRatio'] = lowerUpperRatio
-        self.feats['leftRightSymmetry'] = leftRightRatio
-        return self.feats
+        feats['lowerUpperRatio'] = lowerUpperRatio
+        feats['leftRightSymmetry'] = leftRightRatio
+        return feats
 
 class AllGridExtractor(FeatureExtractor):
     def getFeatures(self, datum):
@@ -60,13 +60,13 @@ class AllGridExtractor(FeatureExtractor):
           Dictionary includes 64 features that marks the intensity on
           each grid space of the datum as a single feature
         """
-
+        feats = util.Counter()
         for i in range(8):
             for j in range(8):
-                self.feats[str((i,j))] = datum.grid[i][j]
-        self.feats.divideAll(16.)
-        self.feats['bias'] = 1.0
-        return self.feats
+                feats[str((i,j))] = datum.grid[i][j]
+        feats.divideAll(16.)
+        feats['bias'] = 1.0
+        return feats
 
 class MaxEntFeatureExtractor(FeatureExtractor):
     V_FOR_SLACK = 16*64.
@@ -76,17 +76,17 @@ class MaxEntFeatureExtractor(FeatureExtractor):
           Dictionary includes 64 features that marks the intensity on
           each grid space of the datum as a single feature
         """
-
+        feats = util.Counter()
         for c in CLASSSET:
             featureSum = 0
             for i in range(8):
                 for j in range(8):
-                    self.feats[(str((i, j)),c)] = datum.grid[i][j]
+                    feats[(str((i, j)),c)] = datum.grid[i][j]
                     featureSum += datum.grid[i][j]
 
-            self.feats['slack',c] = MaxEntFeatureExtractor.V_FOR_SLACK -featureSum
-        self.feats.divideAll(self.V_FOR_SLACK)
-        return self.feats
+            feats['slack',c] = MaxEntFeatureExtractor.V_FOR_SLACK -featureSum
+        feats.divideAll(self.V_FOR_SLACK)
+        return feats
 
 class DecisionTreeFeatureExtractor(FeatureExtractor):
 
