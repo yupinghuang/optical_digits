@@ -113,7 +113,7 @@ class MaxEnt(Classifer):
     """
     The maximum entropy classifier using generalized iterative scaling for training.
     """
-    def train(self, trainingSet, iterations=10):
+    def train(self, trainingSet, iterations=10, holdOutSet=None):
         """
         Update self.weights based on the training data. It apply the trained model to the training
         in each iteration so that a human can figure out the best number of iterations by looking at
@@ -141,7 +141,9 @@ class MaxEnt(Classifer):
         empiricalFeats.divideAll(len(trainingSet))
         # Test how well the uniform model fits the data as a baseline
         print 'RANDOM GUESS'
-        self.test(trainingSet)
+        if holdOutSet is None:
+            holdOutSet = trainingSet
+        self.test(holdOutSet)
 
         # iterations
         # Either converge or just output the result after a certain number of iterations
@@ -172,8 +174,7 @@ class MaxEnt(Classifer):
                 self.weights[key] = updateRatio**(1./MAXENT_V_CONST) * oldWeight
 
             # Test how well the model fits the data
-            testData = trainingSet
-            self.test(testData)
+            self.test(holdOutSet)
             # check for convergence
             '''
             converge = True

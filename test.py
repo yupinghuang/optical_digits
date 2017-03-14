@@ -21,23 +21,29 @@ if __name__=='__main__':
         MIRAClassfier.test(trainingSet)
         print 'test on HOLDOUT set'
         MIRAClassfier.test(holdoutSet)
+        print 'test on TESTING set'
+        MIRAClassfier.test(testSet)
 
 
     def testMaxEnt():
         maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntTertiaryFeatureExtractor())
-        maxEntClassifier.train(trainingSet, iterations=25)
+        maxEntClassifier.train(trainingSet, iterations=100)
         print 'test on TRAINING set'
         maxEntClassifier.test(trainingSet)
         print 'test on HOLDOUT set'
         maxEntClassifier.test(holdoutSet)
+        print 'test on TESTING set'
+        maxEntClassifier.test(testSet)
 
     def testMaxEntFull():
         maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntFeatureExtractor())
-        maxEntClassifier.train(trainingSet, iterations=50)
+        maxEntClassifier.train(trainingSet, iterations=100)
         print 'test on TRAINING set'
         maxEntClassifier.test(trainingSet)
         print 'test on HOLDOUT set'
         maxEntClassifier.test(holdoutSet)
+        print 'test on TESTING set'
+        maxEntClassifier.test(testSet)
 
     def testDT():
         dt = Classfiers.DecisionTree(featureExtractor=DecisionTreeFeatureExtractor())
@@ -46,6 +52,8 @@ if __name__=='__main__':
         dt.test(trainingSet)
         print 'test on HOLDOUT set'
         dt.test(holdoutSet)
+        print 'test on TESTING set'
+        dt.test(testSet)
 
     mapToClassifier = {'MIRA': testMIRA,
                        'MaxEntTertiary': testMaxEnt,
