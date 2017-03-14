@@ -95,7 +95,6 @@ class MIRA(Classifer):
             if datum.label!= classifiedLabel:
                 # Wrong prediction, update weights
                 tau = ((self.weights[classifiedLabel] - self.weights[datum.label])*datumFeature + 1)/(2.0*(datumFeature*datumFeature))
-                print 'tau', tau
                 tau = min(tau, self.miraConst)
                 # need to copy the feature dictionary in order to do the multiplication and updates.
                 datumFeatureMultiplied = datumFeature.copy()

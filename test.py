@@ -5,7 +5,8 @@ import argparse
 import random
 
 if __name__=='__main__':
-    parser = argparse.ArgumentParser(description='Classifier tester.')
+    parser = argparse.ArgumentParser(description='Classifier tester. Will train the classifier given\
+            and test it on the training, holdout and test set separately.')
     parser.add_argument('--classifier',
                         help='The classifier to use: MIRA, MaxEntTertiary, MaxEntFull, DT', type=str)
     args = parser.parse_args()
