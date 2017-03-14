@@ -1,6 +1,6 @@
 from DataSet import DataSet
 import Classfiers
-from FeatureExtractors import AllGridExtractor, MaxEntFeatureExtractor, DecisionTreeFeatureExtractor
+from FeatureExtractors import *
 import random
 
 if __name__=='__main__':
@@ -20,14 +20,17 @@ if __name__=='__main__':
     MIRAClassfier.train(trainingSet)
     MIRAClassfier.test(holdoutSet)
     '''
+
     '''
-    maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntFeatureExtractor())
-    maxEntClassifier.train(trainingSet)
-    print 'TEST ON TRAINING SET!!!'
+    maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntBinaryFeatureExtractor())
+    maxEntClassifier.train(trainingSet, iterations=15)
     maxEntClassifier.test(trainingSet)
     '''
+
+    print 'TEST ON TRAINING SET!!!'
+
     dt = Classfiers.DecisionTree(featureExtractor=DecisionTreeFeatureExtractor())
     dt.train(trainingSet)
-    dt.test(testSet)
+    dt.test(holdoutSet)
 
 

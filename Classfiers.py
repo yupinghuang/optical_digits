@@ -3,6 +3,8 @@ import FeatureExtractors
 from matplotlib import pyplot as plt
 import numpy as np
 from DataSet import CLASSSET
+import sys
+import random
 from DecisionTreeNode import DecisionTreeNode
 import math
 
@@ -22,13 +24,17 @@ class Classifer:
     def test(self, testingSet):
         rightPredicts = 0
         overalPredicts = 0
+        wrongStats = util.Counter()
         for datum in testingSet:
             datumFeature = self.featureExtractor.getFeatures(datum)
             classifiedLabel = self.predict(datumFeature)
             if classifiedLabel == datum.label:
                 rightPredicts += 1
-            overalPredicts += 1
-            print overalPredicts
+            else:
+                wrongStats[datum.label] += 1
+        wrongStats.normalize()
+        print 'fraction of incorrectly classified labels', wrongStats
+
             # print "RIGHT LABEL", datum.label
             # print "CLASSIFIED LABEL", classifiedLabel
             # plot = datum.draw()
@@ -70,7 +76,7 @@ class MIRA(Classifer):
 
 
 class MaxEnt(Classifer):
-    def train(self, trainingSet):
+    def train(self, trainingSet, iterations=10):
         self.weights = util.Counter()
         empiricalFeats = util.Counter()
         modelFeats = util.Counter()
@@ -84,18 +90,21 @@ class MaxEnt(Classifer):
             for featureKey, value in trainingSetFeatures[datum].items():
                     if featureKey[1] == datum.label:
                         empiricalFeats[featureKey] += value
+                    else:
+                        # Just so the key exists.
+                        empiricalFeats[featureKey] += 0.
         empiricalFeats.divideAll(len(trainingSet))
-
-        # Intialize model feature values and the compute them through iteration
-        for key in empiricalFeats.keys():
-            modelFeats[key] = 0.
+        # Test how well the model fits the data
+        testData = trainingSet
+        print 'random guess'
+        self.test(testData)
 
         # iteration
-        # Either converge or just output the result after 10,000 iterations
+        # Either converge or just output the result after a certain number of iterations
 
-        for i in xrange(10000):
+        for i in xrange(iterations):
             print 'iteration', i
-
+            modelFeats = util.Counter()
             # compute expectation for each feature
             for datum in trainingSet:
                 datumFeature = trainingSetFeatures[datum]
@@ -108,20 +117,24 @@ class MaxEnt(Classifer):
             print 'all data done'
             modelFeats.divideAll(len(trainingSet))
 
+            # compute update assuming that the V parameter is scaled down to 1.
             updateRatioVector = util.Counter()
             for featureKey, value in empiricalFeats.items():
-                if value != 0.:
-                    if modelFeats[featureKey] != 0.:
-                        updateRatioVector[featureKey] = empiricalFeats[featureKey]/modelFeats[featureKey]
-                    else:
-                        updateRatioVector[featureKey] = 1.0
+                if modelFeats[featureKey] != 0.:
+                    updateRatioVector[featureKey] = empiricalFeats[featureKey]/modelFeats[featureKey]
+                else:
+                    updateRatioVector[featureKey] = 1.
 
-
+            # Update
             for key, value in updateRatioVector.items():
                 oldWeight = self.weights.setdefault(key, 1.)
                 self.weights[key] = value * oldWeight
 
+            # Test how well the model fits the data
+            testData = trainingSet
+            self.test(testData)
             # check for convergence
+            '''
             converge = True
             for key, value in updateRatioVector.items():
                 if abs(value-1.) > 1e-2:
@@ -131,29 +144,38 @@ class MaxEnt(Classifer):
             if converge:
                 print 'maxent converged!'
                 break
+            '''
+            averageUpdateRatio = np.average([value for key, value in updateRatioVector.items() if value!=0.])
+            print 'average update ratio', averageUpdateRatio
+            if abs(averageUpdateRatio - 1.) < 1e-2:
+                print 'maxent converged'
+                break
 
     def classificationDist(self, feats):
         exponents = util.Counter()
         for key, value in feats.items():
+            # print self.weights.setdefault(key, 1.)
             exponents[key[1]] += self.weights.setdefault(key, 1.) * value
+
         dist = util.Counter()
-        overflowCount = 0
-        for key, value in exponents.items():
-            try:
-                dist[key] = math.exp(value)
-            except OverflowError:
-                if overflowCount==1:
-                    raise "Two labels have overflown likelihood"
-                overflowCount += 1
-                print 'likelihood overflown for label', key
-                dist[key] = float("inf")
-        dist.normalize()
+
+        for label in CLASSSET:
+            labelExponent = exponents[label]
+            denominator = 1.
+            # print exponents
+            for key,value in exponents.items():
+                if key != label:
+                    try:
+                        denominator += math.exp(value - labelExponent)
+                    except OverflowError:
+                        denominator = sys.float_info.max
+            dist[label] = 1./denominator
+
         return dist
 
     def predict(self, datumFeature):
-        maxlabel = max(CLASSSET, key=lambda label: self.classificationDist(datumFeature)[label])
-        # print maxlabel
-        return maxlabel
+        dist = self.classificationDist(datumFeature)
+        return dist.argMax()
 
 class DecisionTree(Classifer):
     def train(self, trainingSet):
