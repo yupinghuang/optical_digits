@@ -7,14 +7,12 @@ import Classfiers
 SYMMETRYTHRESHOLD = 0.2
 
 class FeatureExtractor:
-    def __init__(self):
-        self.feats = util.Counter()
-
+    """
+    Abstract FeatureExtrator class.
+    """
     def getFeatures(self, datum):
         """
-          Returns a dict from features to counts
-          Usually, the count will just be 1.0 for
-          indicator functions.
+          Returns a dict from features to feature values.
         """
         util.raiseNotDefined()
 
@@ -52,6 +50,9 @@ class SymmetryExtractor(FeatureExtractor):
         return feats
 
 class AllGridExtractor(FeatureExtractor):
+    """
+    Features based on the intensity of the 8x8 grid for MIRA.
+    """
     def getFeatures(self, datum):
         """
           Dictionary includes 64 features that marks the intensity on
@@ -66,6 +67,9 @@ class AllGridExtractor(FeatureExtractor):
         return feats
 
 class MaxEntFeatureExtractor(FeatureExtractor):
+    """
+    Features based on the intensity of the 8x8 grid for MaxEnt.
+    """
     V_FOR_SLACK = 16*64.
 
     def getFeatures(self, datum):
@@ -86,6 +90,11 @@ class MaxEntFeatureExtractor(FeatureExtractor):
         return feats
 
 class MaxEntTertiaryFeatureExtractor(FeatureExtractor):
+    """
+    Features valued 0,1,2 for maxEnt for each 8x8 grid point.
+    The cutoff for 0,1,2 are 0, 11, 16 (all intensity are 0-16).
+    """
+
     # Sum of features for a given (datum, label)
     SUM_OF_FEATURES = 64 * 2
 
@@ -114,10 +123,12 @@ class MaxEntTertiaryFeatureExtractor(FeatureExtractor):
         return feats
 
 class DecisionTreeFeatureExtractor(FeatureExtractor):
-
+    """
+    Features valued 0,1,2 for DecisionTree for each 8x8 grid point.
+    The cutoff for 0,1,2 are 0, 11, 16 (all intensity are 0-16).
+    """
     def getFeatures(self, datum):
         """
-
         :param datum:
         :return: return the features of the brightness of each grid intentensity for the given datum.
         """
