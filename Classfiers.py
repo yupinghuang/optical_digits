@@ -10,6 +10,7 @@ import math
 # The update rate constant for MIRA, it seems like in our case the optimal value is 0.05 for
 # the AllGridExtractor
 MIRACONST = 0.05
+MAXENT_V_CONST = 4.
 
 class Classifer:
     """
@@ -165,12 +166,11 @@ class MaxEnt(Classifer):
                 else:
                     updateRatioVector[featureKey] = 1.
 
-            # Update assuming that the V parameter is scaled down to 1.
+            # Update assuming that the V parameter is scaled down to MAXENT_V_CONST.
             for key, updateRatio in updateRatioVector.items():
                 oldWeight = self.weights.setdefault(key, 1.)
-                self.weights[key] = updateRatio**(0.5) * oldWeight
+                self.weights[key] = updateRatio**(1./MAXENT_V_CONST) * oldWeight
 
-            print self.weights
             # Test how well the model fits the data
             testData = trainingSet
             self.test(testData)

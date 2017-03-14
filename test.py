@@ -7,7 +7,7 @@ import random
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Classifier tester.')
     parser.add_argument('--classifier',
-                        help='The classifier to use: MIRA, MaxEnt, DT', type=str)
+                        help='The classifier to use: MIRA, MaxEntTertiary, MaxEntFull, DT', type=str)
     args = parser.parse_args()
 
     trainingSet = DataSet('data/optdigits.tra')
@@ -24,13 +24,20 @@ if __name__=='__main__':
 
 
     def testMaxEnt():
-        maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntBinaryFeatureExtractor())
-        maxEntClassifier.train(trainingSet, iterations=15)
+        maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntTertiaryFeatureExtractor())
+        maxEntClassifier.train(trainingSet, iterations=25)
         print 'test on TRAINING set'
         maxEntClassifier.test(trainingSet)
         print 'test on HOLDOUT set'
         maxEntClassifier.test(holdoutSet)
 
+    def testMaxEntFull():
+        maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntFeatureExtractor())
+        maxEntClassifier.train(trainingSet, iterations=50)
+        print 'test on TRAINING set'
+        maxEntClassifier.test(trainingSet)
+        print 'test on HOLDOUT set'
+        maxEntClassifier.test(holdoutSet)
 
     def testDT():
         dt = Classfiers.DecisionTree(featureExtractor=DecisionTreeFeatureExtractor())
@@ -41,7 +48,8 @@ if __name__=='__main__':
         dt.test(holdoutSet)
 
     mapToClassifier = {'MIRA': testMIRA,
-                       'MaxEnt': testMaxEnt,
+                       'MaxEntTertiary': testMaxEnt,
+                       'MaxEntFull': testMaxEntFull,
                        'DT': testDT}
 
 

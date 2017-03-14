@@ -1,6 +1,7 @@
 import util
 import numpy as np
 from DataSet import CLASSSET
+import Classfiers
 
 
 SYMMETRYTHRESHOLD = 0.2
@@ -16,10 +17,6 @@ class FeatureExtractor:
           indicator functions.
         """
         util.raiseNotDefined()
-
-    # TODO: delete this maybe
-    # def getFeatureNames(self):
-    #     return ['bias', 'topBottomSymmetry', 'leftRightSymmetry']
 
 
 class SymmetryExtractor(FeatureExtractor):
@@ -85,11 +82,12 @@ class MaxEntFeatureExtractor(FeatureExtractor):
                     featureSum += datum.grid[i][j]
 
             feats['slack',c] = MaxEntFeatureExtractor.V_FOR_SLACK -featureSum
-        feats.divideAll(self.V_FOR_SLACK)
+        feats.divideAll(self.V_FOR_SLACK/Classfiers.MAXENT_V_CONST)
         return feats
 
-class MaxEntBinaryFeatureExtractor(FeatureExtractor):
-    V_FOR_SLACK = 64*2
+class MaxEntTertiaryFeatureExtractor(FeatureExtractor):
+    # Sum of features for a given (datum, label)
+    SUM_OF_FEATURES = 64 * 2
 
     def getFeatures(self, datum):
         """
@@ -111,8 +109,8 @@ class MaxEntBinaryFeatureExtractor(FeatureExtractor):
                     feats[(str((i, j)), c)] = brightness
                     featureSum += feats[(str((i, j)),c)]
 
-            feats['slack', c] = self.V_FOR_SLACK - featureSum
-        feats.divideAll(self.V_FOR_SLACK/2.)
+            feats['slack', c] = self.SUM_OF_FEATURES - featureSum
+        feats.divideAll(self.SUM_OF_FEATURES / Classfiers.MAXENT_V_CONST)
         return feats
 
 class DecisionTreeFeatureExtractor(FeatureExtractor):
