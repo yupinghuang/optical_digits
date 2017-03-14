@@ -58,6 +58,7 @@ class Classifer:
                 rightPredicts += 1
             else:
                 wrongStats[datum.label] += 1
+
         for key, value in totalCount.items():
             wrongStats[key] = wrongStats[key] / float(value)
         print 'fraction of instances incorrectly classified for each label', wrongStats
@@ -152,24 +153,24 @@ class MaxEnt(Classifer):
                 datumFeature = trainingSetFeatures[datum]
                 classificationDist = self.classificationDist(datumFeature)
 
-                for key in datumFeature:
-                    featValue = datumFeature[key]
-                    modelFeats[key] += classificationDist[key[1]] * datumFeature[key]
+                for key, featValue in datumFeature.items():
+                    modelFeats[key] += classificationDist[key[1]] * featValue
             modelFeats.divideAll(len(trainingSet))
 
-            # compute update assuming that the V parameter is scaled down to 1.
+            # compute update.
             updateRatioVector = util.Counter()
-            for featureKey, value in empiricalFeats.items():
+            for featureKey, empiricalFeat in empiricalFeats.items():
                 if modelFeats[featureKey] != 0.:
-                    updateRatioVector[featureKey] = empiricalFeats[featureKey]/modelFeats[featureKey]
+                    updateRatioVector[featureKey] = empiricalFeat/modelFeats[featureKey]
                 else:
                     updateRatioVector[featureKey] = 1.
 
-            # Update
-            for key, value in updateRatioVector.items():
+            # Update assuming that the V parameter is scaled down to 1.
+            for key, updateRatio in updateRatioVector.items():
                 oldWeight = self.weights.setdefault(key, 1.)
-                self.weights[key] = value * oldWeight
+                self.weights[key] = updateRatio**(0.5) * oldWeight
 
+            print self.weights
             # Test how well the model fits the data
             testData = trainingSet
             self.test(testData)
@@ -189,12 +190,17 @@ class MaxEnt(Classifer):
             print 'average update ratio absolutedeviation from 1.', averageUpdateRatioDev
             if averageUpdateRatioDev < 1e-2:
                 print 'maxent converged'
-                break
+                # break
 
     def classificationDist(self, feats):
+        """
+        Helper function that calculates the classification distribution given a feature vector.
+        i.e. p(c|x).
+        :param feats: the feature vector
+        :return: The distribution represented by a Counter to which the label c is the key.
+        """
         exponents = util.Counter()
         for key, value in feats.items():
-            # print self.weights.setdefault(key, 1.)
             exponents[key[1]] += self.weights.setdefault(key, 1.) * value
 
         dist = util.Counter()
@@ -208,6 +214,8 @@ class MaxEnt(Classifer):
                     try:
                         denominator += math.exp(value - labelExponent)
                     except OverflowError:
+                        # if the exponent is large, approximate by a very large value that does not cause
+                        # nans
                         denominator = sys.float_info.max
             dist[label] = 1./denominator
         dist.normalize()

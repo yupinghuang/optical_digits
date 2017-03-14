@@ -13,6 +13,7 @@ if __name__=='__main__':
     trainingSet = DataSet('data/optdigits.tra')
     holdoutSet = DataSet('data/optdigits.hol')
     testSet = DataSet('data/optdigits.tes')
+
     def testMIRA():
         MIRAClassfier = Classfiers.MIRA(featureExtractor=AllGridExtractor())
         MIRAClassfier.train(trainingSet)

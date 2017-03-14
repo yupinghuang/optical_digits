@@ -112,7 +112,7 @@ class MaxEntBinaryFeatureExtractor(FeatureExtractor):
                     featureSum += feats[(str((i, j)),c)]
 
             feats['slack', c] = self.V_FOR_SLACK - featureSum
-        feats.divideAll(self.V_FOR_SLACK)
+        feats.divideAll(self.V_FOR_SLACK/2.)
         return feats
 
 class DecisionTreeFeatureExtractor(FeatureExtractor):
