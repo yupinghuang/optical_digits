@@ -21,12 +21,14 @@ class Classifer:
 
     def test(self, testingSet):
         rightPredicts = 0
+        overalPredicts = 0
         for datum in testingSet:
             datumFeature = self.featureExtractor.getFeatures(datum)
             classifiedLabel = self.predict(datumFeature)
             if classifiedLabel == datum.label:
                 rightPredicts += 1
-
+            overalPredicts += 1
+            print overalPredicts
             # print "RIGHT LABEL", datum.label
             # print "CLASSIFIED LABEL", classifiedLabel
             # plot = datum.draw()
@@ -219,7 +221,7 @@ class DecisionTree(Classifer):
         for datum in trainingSetFeatures:
             datumFeature = datum[0]
             featureValue = datumFeature[feature]
-            label = datum.label
+            label = datum[1]
             probabilityMatrix[featureValue][int(label)] += 1
 
         # sum to find the sum of
@@ -235,9 +237,14 @@ class DecisionTree(Classifer):
         for featureValue in featureValues:
             sumFeatureValueEntropy = 0
             for label in CLASSSET:
-                condProb = probabilityMatrix[featureValue][int(label)] / featureCount[
-                    featureValue]
-                sumFeatureValueEntropy += condProb * math.log(condProb,2)
+                numerator = probabilityMatrix[featureValue][int(label)]
+                denomintor = featureCount[featureValue]
+
+                if numerator == 0 or denomintor== 0:
+                    continue
+                else:
+                    condProb = numerator / denomintor
+                    sumFeatureValueEntropy += condProb * math.log(condProb, 2)
             condEntropy -= featureProb[featureValue] * sumFeatureValueEntropy
 
         return condEntropy

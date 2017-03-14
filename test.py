@@ -20,6 +20,7 @@ if __name__=='__main__':
     MIRAClassfier.train(trainingSet)
     MIRAClassfier.test(holdoutSet)
     '''
+    '''
     maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntFeatureExtractor())
     maxEntClassifier.train(trainingSet)
     print 'TEST ON TRAINING SET!!!'
@@ -29,4 +30,4 @@ if __name__=='__main__':
     dt.train(trainingSet)
     dt.test(testSet)
 
-    '''
+
