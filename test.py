@@ -1,36 +1,42 @@
 from DataSet import DataSet
 import Classfiers
 from FeatureExtractors import *
+import argparse
 import random
 
 if __name__=='__main__':
-    # Read the data and randomly plot 10 of them
+    parser = argparse.ArgumentParser(description='Classifier tester.')
+    parser.add_argument('--classifier',
+                        help='The classifier to use: MIRA, MaxEnt, DT', type=str)
+    args = parser.parse_args()
+
     trainingSet = DataSet('data/optdigits.tra')
     holdoutSet = DataSet('data/optdigits.hol')
     testSet = DataSet('data/optdigits.tes')
-    # for i in range(10):
-    #     trainingSet.plotRandom()
 
-    # trainingSubset = [random.choice(trainingSet) for i in range(10)]
-    # testingSubset = [testingSet[i] for i in range(10)]
-    # MIRAClassfier.train(trainingSubset)
-    # MIRAClassfier.test(testingSet)
-    '''
-    MIRAClassfier = Classfiers.MIRA(featureExtractor=AllGridExtractor())
-    MIRAClassfier.train(trainingSet)
-    MIRAClassfier.test(holdoutSet)
-    '''
 
-    '''
-    maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntBinaryFeatureExtractor())
-    maxEntClassifier.train(trainingSet, iterations=15)
-    maxEntClassifier.test(trainingSet)
-    '''
+    def testMIRA():
+        MIRAClassfier = Classfiers.MIRA(featureExtractor=AllGridExtractor())
+        MIRAClassfier.train(trainingSet)
+        MIRAClassfier.test(holdoutSet)
 
-    print 'TEST ON TRAINING SET!!!'
 
-    dt = Classfiers.DecisionTree(featureExtractor=DecisionTreeFeatureExtractor())
-    dt.train(trainingSet)
-    dt.test(holdoutSet)
+    def testMaxEnt():
+        maxEntClassifier = Classfiers.MaxEnt(featureExtractor=MaxEntBinaryFeatureExtractor())
+        maxEntClassifier.train(trainingSet, iterations=15)
+        maxEntClassifier.test(trainingSet)
 
+
+    def testDT():
+        dt = Classfiers.DecisionTree(featureExtractor=DecisionTreeFeatureExtractor())
+        dt.train(trainingSet)
+        dt.test(holdoutSet)
+
+    mapToClassifier = {'MIRA': testMIRA,
+                       'MaxEnt': testMaxEnt,
+                       'DT': testDT}
+
+
+    toRun = mapToClassifier[args.classifier]
+    toRun()
 
