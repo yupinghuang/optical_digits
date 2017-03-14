@@ -6,8 +6,8 @@ class DecisionTreeNode(object):
         feature values.
 
         :param unsplitFeatureList: the list of features that have not been split.
-        :param feature: the name of the feature this node is split on.
-        :param value: the value of the feature this node is split on.
+        :param feature: the name of the feature its children are split on.
+        :param value: the value of the feature THIS node is split on.
         :param parent: the parent.
         """
         self.unsplitFeatureList = unsplitFeatureList
@@ -25,7 +25,7 @@ class DecisionTreeNode(object):
         :param featureList: the list of the names of the features
         :param featureData: a list of tuples (featureVector, label) where featureVector is the output
         of FeatureExtractor for a given datum and label the datum's label.
-        :return:
+        :return: the root node of a Decision Tree.
         """
         root = DecisionTreeNode(unsplitFeatureList=featureList)
         root.featureData = featureData
@@ -39,7 +39,7 @@ class DecisionTreeNode(object):
         """
         self.feature = featureName
         if self.children:
-            raise Exception("Cannot split on a node that has children")
+            raise Exception("Cannot split on a node that has children.")
 
         nextFeatureList = list(self.unsplitFeatureList)
         nextFeatureList.remove(featureName)
@@ -49,11 +49,30 @@ class DecisionTreeNode(object):
                 feature=None, value=featureValue, parent=self))
             childNode.featureData.append(dataPoint)
 
+    def getmostProbableLabel(self):
+        """
+        Get the most probable label (the majority) a tree node represents.
+        :return: a label.
+        """
+        dist = self._getLabelDist()
+        return dist.argMax()
+
+    def _getLabelDist(self):
+        """
+        Get the distribution of labels for the current node.
+        :return: A Counter object representing the normalized distribution.
+        """
+        dist = util.Counter()
+        for data, label in self.featureData:
+            dist[label] += 1.
+        dist.normalize()
+        return dist
+
     def find(self, featureVector):
         """
-        Find a leaf node that the featureVector belongs
-        :param featureVector:
-        :return:
+        Find a leaf node that the featureVector belongs when the tree predicts the class of a datum.
+        :param featureVector: a featureVector which is the output of FeatureExtractor for a given datum.
+        :return: the node that it belongs in the tree.
         """
         if not self.children:
             return self
@@ -61,17 +80,6 @@ class DecisionTreeNode(object):
             if featureVector[self.feature] not in self.children.keys():
                 return self
             else:
-                rightChild = self.children[featureVector[self.feature]]
-                rightNode = rightChild.find(featureVector)
-                return rightNode
-        
-    def getLabelDist(self):
-        dist = util.Counter()
-        for data, label in self.featureData:
-            dist[label] += 1.
-        dist.normalize()
-        return dist
+                nextChild = self.children[featureVector[self.feature]]
+                return nextChild.find(featureVector)
 
-    def getmostProbableLabel(self):
-        dist = self.getLabelDist()
-        return dist.argMax()

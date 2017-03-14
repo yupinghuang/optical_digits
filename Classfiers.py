@@ -7,34 +7,60 @@ import sys
 import random
 from DecisionTreeNode import DecisionTreeNode
 import math
-
-MIRACONST = 1.
+# The update rate constant for MIRA, it seems like in our case the optimal value is 0.05 for
+# the AllGridExtractor
+MIRACONST = 0.05
 
 class Classifer:
+    """
+    The interface for all Classifier classes.
+    """
     def __init__(self, featureExtractor):
+        """
+        Initializer.
+        :param featureExtractor: the featureExtractor INSTANCE that should be used for the classifier.
+        """
         self.weights = {}
         self.featureExtractor = featureExtractor
 
     def train(self, trainingSet):
+        """
+        Train the classifier.
+        :param trainingSet:
+        :return:
+        """
         util.raiseNotDefined()
 
     def predict(self, datum):
+        """
+        Returns the predicted label of a datum object.
+        :param datum:
+        :return:
+        """
         util.raiseNotDefined()
 
     def test(self, testingSet):
+        """
+        testing method for all Classifiers. Print out a bunch of helpful metrics.
+        :param testingSet:
+        :return:
+        """
         rightPredicts = 0
 
         overalPredicts = 0
         wrongStats = util.Counter()
+        totalCount = util.Counter()
         for datum in testingSet:
             datumFeature = self.featureExtractor.getFeatures(datum)
             classifiedLabel = self.predict(datumFeature)
+            totalCount[datum.label] += 1
             if classifiedLabel == datum.label:
                 rightPredicts += 1
             else:
                 wrongStats[datum.label] += 1
-        wrongStats.normalize()
-        print 'fraction of incorrectly classified labels', wrongStats
+        for key, value in totalCount.items():
+            wrongStats[key] = wrongStats[key] / float(value)
+        print 'fraction of instances incorrectly classified for each label', wrongStats
             # print "RIGHT LABEL", datum.label
             # print "CLASSIFIED LABEL", classifiedLabel
             # plot = datum.draw()
@@ -43,44 +69,61 @@ class Classifer:
         print "RIGHTLY PREDICTED:", float(rightPredicts)/len(testingSet)
 
 class MIRA(Classifer):
+    """
+    The MIRA classifier
+    """
     def __init__(self, featureExtractor, miraConst = MIRACONST):
+        # self.miraConst is the upper bound for the tau ratio calculated during MIRA update.
         self.miraConst = miraConst
         Classifer.__init__(self, featureExtractor)
 
     def train(self, trainingSet):
-        #TODO: add iteration part here
-
+        """
+        Update self.weights given the trainingSet.
+        :param trainingSet: A DataSet object representing the training set.
+        :return:
+        """
         for label in CLASSSET:
             self.weights[label] = util.Counter()
 
         for datum in trainingSet:
             datumFeature = self.featureExtractor.getFeatures(datum)
-
             classifiedLabel = self.predict(datumFeature)
-            # print "RIGHT LABEL", datum.label
 
             if datum.label!= classifiedLabel:
+                # Wrong prediction, update weights
                 tau = ((self.weights[classifiedLabel] - self.weights[datum.label])*datumFeature + 1)/(2.0*(datumFeature*datumFeature))
+                print 'tau', tau
                 tau = min(tau, self.miraConst)
-
+                # need to copy the feature dictionary in order to do the multiplication and updates.
                 datumFeatureMultiplied = datumFeature.copy()
                 datumFeatureMultiplied.multiplyAll(tau)
                 self.weights[classifiedLabel] -= datumFeatureMultiplied
                 self.weights[datum.label] += datumFeatureMultiplied
-                # print self.weights[datum.label]
 
     def predict(self, datumFeature):
         maxlabel = max(CLASSSET, key=lambda label: self.weights[label] * datumFeature)
-        # print maxlabel
+        # print self.weights[maxlabel] * datumFeature
         return maxlabel
 
 
 class MaxEnt(Classifer):
+    """
+    The maximum entropy classifier using generalized iterative scaling for training.
+    """
     def train(self, trainingSet, iterations=10):
+        """
+        Update self.weights based on the training data. It apply the trained model to the training
+        in each iteration so that a human can figure out the best number of iterations by looking at
+        the output.
+        :param trainingSet: A DataSet object representing the training set.
+        :param iterations: Upper bound of number of iterations.
+        :return:
+        """
         self.weights = util.Counter()
         empiricalFeats = util.Counter()
-        modelFeats = util.Counter()
-        # store feature vectors for all data
+
+        # store feature vectors for all data to speed up the process
         trainingSetFeatures = {}
         for datum in trainingSet:
             trainingSetFeatures[datum] = self.featureExtractor.getFeatures(datum)
@@ -94,18 +137,17 @@ class MaxEnt(Classifer):
                         # Just so the key exists.
                         empiricalFeats[featureKey] += 0.
         empiricalFeats.divideAll(len(trainingSet))
-        # Test how well the model fits the data
-        testData = trainingSet
-        print 'random guess'
-        self.test(testData)
+        # Test how well the uniform model fits the data as a baseline
+        print 'RANDOM GUESS'
+        self.test(trainingSet)
 
-        # iteration
+        # iterations
         # Either converge or just output the result after a certain number of iterations
 
         for i in xrange(iterations):
             print 'iteration', i
             modelFeats = util.Counter()
-            # compute expectation for each feature
+            # compute expectation for each feature under the model
             for datum in trainingSet:
                 datumFeature = trainingSetFeatures[datum]
                 classificationDist = self.classificationDist(datumFeature)
@@ -113,8 +155,6 @@ class MaxEnt(Classifer):
                 for key in datumFeature:
                     featValue = datumFeature[key]
                     modelFeats[key] += classificationDist[key[1]] * datumFeature[key]
-
-            print 'all data done'
             modelFeats.divideAll(len(trainingSet))
 
             # compute update assuming that the V parameter is scaled down to 1.
@@ -145,9 +185,9 @@ class MaxEnt(Classifer):
                 print 'maxent converged!'
                 break
             '''
-            averageUpdateRatio = np.average([value for key, value in updateRatioVector.items() if value!=0.])
-            print 'average update ratio', averageUpdateRatio
-            if abs(averageUpdateRatio - 1.) < 1e-2:
+            averageUpdateRatioDev = np.average([abs(value-1.) for key, value in updateRatioVector.items() if value!=0.])
+            print 'average update ratio absolutedeviation from 1.', averageUpdateRatioDev
+            if averageUpdateRatioDev < 1e-2:
                 print 'maxent converged'
                 break
 
@@ -170,7 +210,7 @@ class MaxEnt(Classifer):
                     except OverflowError:
                         denominator = sys.float_info.max
             dist[label] = 1./denominator
-
+        dist.normalize()
         return dist
 
     def predict(self, datumFeature):
@@ -230,11 +270,25 @@ class DecisionTree(Classifer):
             self.buildTree(child)
 
     def pickFeatureToSplit(self, remainingFeatures, remainingData):
+        """
+        Pick the next feature (the one with the lowest conditional entropy) to split.
+        :param remainingFeatures: A list of the unsplit features.
+        :param remainingData: The data to be split.
+        :return:
+        """
         featureToSplit = min(remainingFeatures, key=lambda f: self.getConditionalEntropy(f, remainingData,
                             self.featureExtractor.getFeatureValues()))
         return featureToSplit
 
-    def getConditionalEntropy(self,feature, trainingSetFeatures, featureValues):
+    def getConditionalEntropy(self, feature, trainingSetFeatures, featureValues):
+        """
+        Calculate the conditional entropy of a set of training data given a feature.
+        ASSUMING that feature values are 0,1,2,3...
+        :param feature: Name of the feature to condition on.
+        :param trainingSetFeatures: the training data.
+        :param featureValues: The possible values for the feature.
+        :return: the value of conditional entropy
+        """
         # create a matrix to store the value
         probabilityMatrix = np.zeros((len(featureValues),len(CLASSSET)))
         # going through each datum to count their occurance for the label and feature
@@ -247,17 +301,17 @@ class DecisionTree(Classifer):
             probabilityMatrix[featureValue][int(label)] += 1
 
         # sum to find the sum of
-        featureValueCount = np.sum(probabilityMatrix,axis = 1)
+        featureValueCount = np.sum(probabilityMatrix, axis = 1)
         featureValueProb = featureValueCount/len(trainingSetFeatures)
 
         #calculate out conditional entropy
-        condEntropy = 0
+        condEntropy = 0.
         for featureValue in featureValues:
-            sumFeatureValueEntropy = 0
+            sumFeatureValueEntropy = 0.
             for label in CLASSSET:
                 numerator = probabilityMatrix[featureValue][int(label)]
                 denomintor = featureValueCount[featureValue]
-                if numerator == 0 or denomintor== 0:
+                if numerator == 0. or denomintor== 0.:
                     continue
                 else:
                     condProb = numerator / denomintor
@@ -267,5 +321,11 @@ class DecisionTree(Classifer):
         return condEntropy
 
     def predict(self, features):
+        """
+        Find the node in the decision tree that a given feature vector should end up in and return
+        the majority label in that node.
+        :param features:
+        :return:
+        """
         leafNode = self.root.find(features)
         return leafNode.getmostProbableLabel()

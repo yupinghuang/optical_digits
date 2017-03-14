@@ -7,7 +7,15 @@ DIMENSION = 8
 CLASSSET = ['0','1','2','3','4','5','6','7','8','9']
 
 class DataSet():
+    """
+    DataSet that functions essentially like a list. The initializer reads the data file and
+    generate a list of Datum objects representing the instances.
+    """
     def __init__(self, filename):
+        """
+        Read a file and generate a DataSet object.
+        :param filename: the filename.
+        """
         self.data = []
         with open(filename, 'r') as f:
             for line in f:
@@ -22,6 +30,10 @@ class DataSet():
                     self.data.append(Datum(grid, label))
 
     def plotRandom(self):
+        """
+        Plot a random instance in the dataset and print the label to the screen.
+        :return:
+        """
         dat = random.choice(self.data)
         plot = dat.draw()
         print dat.label
@@ -38,8 +50,14 @@ class DataSet():
 
 
 class Datum(object):
+    """
+    Datum object holds one data sample.
+    """
     def __init__(self, grid, label):
-        """ Datum object holds one data sample.
+        """
+
+        :param grid: the 8x8 matrix of integers from the preprocessed data.
+        :param label: the label of the data poit.
         """
         self.grid = grid
         self.label = label

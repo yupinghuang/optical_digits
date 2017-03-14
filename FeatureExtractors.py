@@ -89,8 +89,7 @@ class MaxEntFeatureExtractor(FeatureExtractor):
         return feats
 
 class MaxEntBinaryFeatureExtractor(FeatureExtractor):
-    # V_FOR_SLACK = 16*64.
-    V_FOR_SLACK = 64
+    V_FOR_SLACK = 64*2
 
     def getFeatures(self, datum):
         """
@@ -102,9 +101,16 @@ class MaxEntBinaryFeatureExtractor(FeatureExtractor):
             featureSum = 0
             for i in range(8):
                 for j in range(8):
-                    feats[(str((i, j)),c)] = 1 if datum.grid[i][j] > 8 else 0
+                    intensity = datum.grid[i][j]
+                    if intensity < 6:
+                        brightness = 0
+                    elif intensity < 11:
+                        brightness = 1
+                    else:
+                        brightness = 2
+                    feats[(str((i, j)), c)] = brightness
                     featureSum += feats[(str((i, j)),c)]
-            # feats['slack',c] = MaxEntFeatureExtractor.V_FOR_SLACK -featureSum
+
             feats['slack', c] = self.V_FOR_SLACK - featureSum
         feats.divideAll(self.V_FOR_SLACK)
         return feats
