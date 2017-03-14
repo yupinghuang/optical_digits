@@ -88,6 +88,27 @@ class MaxEntFeatureExtractor(FeatureExtractor):
         feats.divideAll(self.V_FOR_SLACK)
         return feats
 
+class MaxEntBinaryFeatureExtractor(FeatureExtractor):
+    # V_FOR_SLACK = 16*64.
+    V_FOR_SLACK = 64
+
+    def getFeatures(self, datum):
+        """
+          Dictionary includes 64 features that marks the intensity on
+          each grid space of the datum as a single feature
+        """
+        feats = util.Counter()
+        for c in CLASSSET:
+            featureSum = 0
+            for i in range(8):
+                for j in range(8):
+                    feats[(str((i, j)),c)] = 1 if datum.grid[i][j] > 8 else 0
+                    featureSum += feats[(str((i, j)),c)]
+            # feats['slack',c] = MaxEntFeatureExtractor.V_FOR_SLACK -featureSum
+            feats['slack', c] = self.V_FOR_SLACK - featureSum
+        feats.divideAll(self.V_FOR_SLACK)
+        return feats
+
 class DecisionTreeFeatureExtractor(FeatureExtractor):
 
     def getFeatures(self, datum):
