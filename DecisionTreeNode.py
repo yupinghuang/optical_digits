@@ -37,25 +37,16 @@ class DecisionTreeNode(object):
         :param featureName: the name of the feature to split
         :return:
         """
+        self.feature = featureName
         if self.children:
             raise Exception("Cannot split on a node that has children")
 
-        if featureName == '(5, 5)':
-            print 'STOP HERE'
         nextFeatureList = list(self.unsplitFeatureList)
         nextFeatureList.remove(featureName)
         for dataPoint in self.featureData:
             featureValue = dataPoint[0][featureName]
-            if featureValue == 0:
-                print featureValue
-            elif featureValue == 1:
-                print featureValue
-            elif featureValue == 2:
-                print featureValue
-            else:
-                raise Exception
             childNode = self.children.setdefault(featureValue, DecisionTreeNode(unsplitFeatureList=nextFeatureList,
-                feature=featureName, value=featureValue, parent=self))
+                feature=None, value=featureValue, parent=self))
             childNode.featureData.append(dataPoint)
 
     def find(self, featureVector):
@@ -67,9 +58,12 @@ class DecisionTreeNode(object):
         if not self.children:
             return self
         else:
-            rightChild = self.children[featureVector[self.feature]]
-            rightNode = rightChild.find(featureVector)
-            return rightNode
+            if featureVector[self.feature] not in self.children.keys():
+                return self
+            else:
+                rightChild = self.children[featureVector[self.feature]]
+                rightNode = rightChild.find(featureVector)
+                return rightNode
         
     def getLabelDist(self):
         dist = util.Counter()

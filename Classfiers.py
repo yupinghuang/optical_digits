@@ -21,14 +21,11 @@ class Classifer:
 
     def test(self, testingSet):
         rightPredicts = 0
-        overalPredicts = 0
         for datum in testingSet:
             datumFeature = self.featureExtractor.getFeatures(datum)
             classifiedLabel = self.predict(datumFeature)
             if classifiedLabel == datum.label:
                 rightPredicts += 1
-            overalPredicts += 1
-            print overalPredicts
             # print "RIGHT LABEL", datum.label
             # print "CLASSIFIED LABEL", classifiedLabel
             # plot = datum.draw()
@@ -225,12 +222,8 @@ class DecisionTree(Classifer):
             probabilityMatrix[featureValue][int(label)] += 1
 
         # sum to find the sum of
-        featureCount = np.sum(probabilityMatrix,axis = 1)
-        featureProb = featureCount/len(trainingSetFeatures)
-
-        # for featureValue in featureValues:
-        #     for label in CLASSSET:
-        #         probabilityMatrix[featureValue][label] = probabilityMatrix[featureValue][label]/featureCount[featureValue]
+        featureValueCount = np.sum(probabilityMatrix,axis = 1)
+        featureValueProb = featureValueCount/len(trainingSetFeatures)
 
         #calculate out conditional entropy
         condEntropy = 0
@@ -238,14 +231,13 @@ class DecisionTree(Classifer):
             sumFeatureValueEntropy = 0
             for label in CLASSSET:
                 numerator = probabilityMatrix[featureValue][int(label)]
-                denomintor = featureCount[featureValue]
-
+                denomintor = featureValueCount[featureValue]
                 if numerator == 0 or denomintor== 0:
                     continue
                 else:
                     condProb = numerator / denomintor
                     sumFeatureValueEntropy += condProb * math.log(condProb, 2)
-            condEntropy -= featureProb[featureValue] * sumFeatureValueEntropy
+            condEntropy -= featureValueProb[featureValue] * sumFeatureValueEntropy
 
         return condEntropy
 

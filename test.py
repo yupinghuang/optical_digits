@@ -28,6 +28,6 @@ if __name__=='__main__':
     '''
     dt = Classfiers.DecisionTree(featureExtractor=DecisionTreeFeatureExtractor())
     dt.train(trainingSet)
-    dt.test(testSet)
+    dt.test(holdoutSet)
 
 
